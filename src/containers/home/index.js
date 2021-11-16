@@ -1,12 +1,24 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { decrement, increment, changeColor } from '../../reducer/count';
-import { addList } from '../../reducer/todo';
+import {
+  addList,
+  addList_SUCCESS,
+  addList_FAIL,
+  deleteSingleList,
+  deleteSingleList_FAIL,
+  deleteSingleList_SUCCESS,
+} from '../../reducer/todo';
 
 const Home = () => {
+  const [deleteKey, setDeleteKey] = useState('');
   const count = useSelector((state) => state.counter.value);
   const color = useSelector((state) => state.counter.randomColor);
-  const todoList = useSelector((state) => state.todo.list);
+  const {
+    list: todoList,
+    isLoading,
+    error,
+  } = useSelector((state) => state.todo);
   let inputRef = useRef();
   const [r, g, b] = color;
   const dispatch = useDispatch();
@@ -22,6 +34,7 @@ const Home = () => {
 
   const addToDoList = () => {
     if (!inputRef.value) {
+      alert('input cannot be empty');
       return;
     }
 
@@ -30,8 +43,32 @@ const Home = () => {
       key: new Date().toISOString(),
     };
 
-    dispatch(addList(data));
-    inputRef.value = '';
+    // dispatch(addList());
+    // inputRef.value = '';
+
+    try {
+      dispatch(addList());
+      inputRef.value = '';
+
+      setTimeout(() => {
+        dispatch(addList_SUCCESS(data));
+      }, 3000);
+    } catch (error) {
+      dispatch(addList_FAIL(error));
+    }
+  };
+
+  const deleteSingleToDoList = (key) => {
+    setDeleteKey(key);
+    try {
+      dispatch(deleteSingleList());
+      setTimeout(() => {
+        dispatch(deleteSingleList_SUCCESS(key));
+        setDeleteKey('');
+      }, 2000);
+    } catch (error) {
+      dispatch(deleteSingleList_FAIL(error));
+    }
   };
 
   return (
@@ -79,10 +116,13 @@ const Home = () => {
         <button
           onClick={addToDoList}
           className='border-2 border-black text-black p-1 m-4 w-20 rounded-md'
+          disabled={isLoading}
         >
           Add List
         </button>
       </div>
+
+      <div>{isLoading && !deleteKey && <p>Adding New List .....</p>}</div>
 
       <div className='text-black h-80 overflow-scroll w-full flex justify-center items-start flex-wrap'>
         {todoList.length ? (
@@ -95,9 +135,15 @@ const Home = () => {
                 {index + 1}. {item.title}
               </h3>
               <p>{item.key}</p>
-              <button className='border-2 border-black text-black p-1 m-4 w-20 rounded-md'>
-                Delete
-              </button>
+              <div className='flex flex-col items-center w-full'>
+                <button
+                  onClick={() => deleteSingleToDoList(item.key)}
+                  className='border-2 border-black text-black p-1 m-4 w-20 rounded-md'
+                >
+                  Delete
+                </button>
+                {isLoading && deleteKey === item.key && <p>deleting...</p>}
+              </div>
             </div>
           ))
         ) : (
