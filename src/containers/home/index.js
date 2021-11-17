@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { decrement, increment, changeColor } from '../../reducer/count';
+import { logout } from '../../reducer/login';
 import {
   addList,
   addList_SUCCESS,
@@ -20,8 +22,10 @@ const Home = () => {
     error,
   } = useSelector((state) => state.todo);
   let inputRef = useRef();
+  const user = JSON.parse(localStorage.getItem('user'));
   const [r, g, b] = color;
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const changeTheColor = () => {
     const colorArr = [
@@ -71,11 +75,24 @@ const Home = () => {
     }
   };
 
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
   return (
     <div
       className='text-center flex flex-col items-center justify-start min-h-screen py-4'
       style={{ backgroundColor: `rgb(${r}, ${g}, ${b})` }}
     >
+      <h1>Hello, {user.name} </h1>
+      <button
+        onClick={handleLogout}
+        className='border-2 border-black p-2 m-4 w-20 rounded-md'
+      >
+        Logout
+      </button>
       <h1>This Is Home</h1>
       <h1>Count: {count}</h1>
 
